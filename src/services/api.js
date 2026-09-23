@@ -28,6 +28,9 @@ async function adminRequest(endpoint, options = {}) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
+    if (response.status === 401 && endpoint !== '/login') {
+      adminTokenStorage.clear();
+    }
     const errorMsg = data.detail || data.message || `Request failed with status ${response.status}`;
     const err = new Error(errorMsg);
     err.status = response.status;
@@ -53,6 +56,8 @@ export const adminApi = {
   logout: async () => {
     try {
       await adminRequest('/logout', { method: 'POST' });
+    } catch {
+      // Session already expired or ended
     } finally {
       adminTokenStorage.clear();
     }
